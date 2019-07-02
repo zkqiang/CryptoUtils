@@ -40,16 +40,28 @@ class AESCrypto(object):
         plain_text = crypto.decrypt(cipher_bytes).decode()
         return self._unpad(plain_text)
 
-    def _pad(self, text: str):
-        """ 填充 """
+    def _pad(self, text: str) -> str:
+        """
+        填充
+        NoPadding 填充是区块不足倍数时补零字节码
+        PKCS5Padding 填充是区块不足倍数时补缺少位数的字节码
+        :param text: str
+        :return: str
+        """
         size = AES.block_size
         pad_size = size - len(text) % size
         if self.no_padding:
             return text + pad_size * '\0'
         return text + pad_size * chr(pad_size)
 
-    def _unpad(self, text: str):
-        """ 去填充 """
+    def _unpad(self, text: str) -> str:
+        """
+        去除填充
+        NoPadding 填充是去除末尾的零字节码
+        PKCS5Padding 填充是根据最后一位的字节码去除对应的位数
+        :param text: str
+        :return: str
+        """
         if self.no_padding:
             return text.rstrip('\0')
         return text[:-ord(text[-1])]
