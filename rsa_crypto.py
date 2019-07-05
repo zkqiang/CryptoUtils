@@ -55,12 +55,14 @@ class RSACrypto(object):
         :param public_key: 公钥
         :return: str
         """
-
         start = '-----BEGIN PUBLIC KEY-----\n'
         end = '\n-----END PUBLIC KEY-----'
-        if public_key.startswith(start):
-            return start + public_key + end
-        return public_key
+        key = public_key
+        if not key.startswith(start):
+            key = start + key
+        if not key.endswith(start):
+            key = key + end
+        return key
 
     @staticmethod
     def _format_private_key(private_key: str) -> str:
@@ -71,6 +73,9 @@ class RSACrypto(object):
         """
         start = '-----BEGIN RSA PRIVATE KEY-----\n'
         end = '\n-----END RSA PRIVATE KEY-----'
-        if private_key.startswith(start):
-            return start + private_key + end
-        return private_key
+        key = private_key
+        if not key.startswith(start):
+            key = start + key
+        if not key.endswith(start):
+            key = key + end
+        return key
