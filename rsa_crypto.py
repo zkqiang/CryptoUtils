@@ -51,12 +51,12 @@ class RSACrypto(object):
     @staticmethod
     def _format_public_key(public_key: str) -> str:
         """
-        将公钥字符串处理成可识别的格式
+        将公钥字符串处理成可导入的格式
         :param public_key: 公钥
         :return: str
         """
-        start = '-----BEGIN PUBLIC KEY-----\n'
-        end = '\n-----END PUBLIC KEY-----'
+        start = '-----BEGIN RSA PUBLIC KEY-----\n'
+        end = '\n-----END RSA PUBLIC KEY-----'
         key = public_key
         if not key.startswith(start):
             key = start + key
@@ -67,7 +67,7 @@ class RSACrypto(object):
     @staticmethod
     def _format_private_key(private_key: str) -> str:
         """
-        将私钥字符串处理成可识别的格式
+        将私钥字符串处理成可导入的格式
         :param private_key: 私钥
         :return: str
         """
