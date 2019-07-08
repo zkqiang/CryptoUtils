@@ -9,7 +9,8 @@ class AESCrypto(object):
 
     def __init__(self, key: str, mode: str, no_padding: bool):
         self.key = key[:16].encode()
-        self.mode = getattr(AES, 'MODE_' + mode.upper())
+        self.mode = 'MODE_' + mode.upper()
+        self._mode = getattr(AES, self.mode)
         self.no_padding = no_padding
 
     def encrypt(self, plain_text: str, iv: str = None) -> str:
@@ -20,8 +21,16 @@ class AESCrypto(object):
             `MODE_OFB`, `MODE_OPENPGP` 需要指定
         :return: 密文
         """
-        iv = iv if iv is None else iv.encode()
-        crypto = AES.new(self.key, self.mode, iv=iv)
+        if iv:
+            assert self._mode in [
+                AES.MODE_CBC,
+                AES.MODE_CFB,
+                AES.MODE_OFB,
+                AES.MODE_OPENPGP
+            ], 'iv is not applicable for %s mode' % self.mode
+            crypto = AES.new(self.key, self._mode, iv=iv.encode())
+        else:
+            crypto = AES.new(self.key, self._mode)
         cipher_bytes = crypto.encrypt(
             self._pad(plain_text).encode())
         cipher_text = base64.b64encode(cipher_bytes)
@@ -35,8 +44,16 @@ class AESCrypto(object):
         :return: 明文
         """
         cipher_bytes = base64.b64decode(cipher_text)
-        iv = iv if iv is None else iv.encode()
-        crypto = AES.new(self.key, self.mode, iv=iv)
+        if iv:
+            assert self._mode in [
+                AES.MODE_CBC,
+                AES.MODE_CFB,
+                AES.MODE_OFB,
+                AES.MODE_OPENPGP
+            ], 'iv is not applicable for %s mode' % self.mode
+            crypto = AES.new(self.key, self._mode, iv=iv.encode())
+        else:
+            crypto = AES.new(self.key, self._mode)
         plain_text = crypto.decrypt(cipher_bytes).decode()
         return self._unpad(plain_text)
 
