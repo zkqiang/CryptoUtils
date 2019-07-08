@@ -21,20 +21,10 @@ class AESCrypto(object):
             `MODE_OFB`, `MODE_OPENPGP` 需要指定
         :return: 密文
         """
-        if iv:
-            assert self._mode in [
-                AES.MODE_CBC,
-                AES.MODE_CFB,
-                AES.MODE_OFB,
-                AES.MODE_OPENPGP
-            ], 'iv is not applicable for %s mode' % self.mode
-            crypto = AES.new(self.key, self._mode, iv=iv.encode())
-        else:
-            crypto = AES.new(self.key, self._mode)
-        cipher_bytes = crypto.encrypt(
+        cipher = self._new_cipher(iv)
+        cipher_bytes = cipher.encrypt(
             self._pad(plain_text).encode())
-        cipher_text = base64.b64encode(cipher_bytes)
-        return cipher_text.decode()
+        return base64.b64encode(cipher_bytes).decode()
 
     def decrypt(self, cipher_text: str, iv: str = None) -> str:
         """
@@ -44,18 +34,20 @@ class AESCrypto(object):
         :return: 明文
         """
         cipher_bytes = base64.b64decode(cipher_text)
-        if iv:
-            assert self._mode in [
-                AES.MODE_CBC,
-                AES.MODE_CFB,
-                AES.MODE_OFB,
-                AES.MODE_OPENPGP
-            ], 'iv is not applicable for %s mode' % self.mode
-            crypto = AES.new(self.key, self._mode, iv=iv.encode())
-        else:
-            crypto = AES.new(self.key, self._mode)
-        plain_text = crypto.decrypt(cipher_bytes).decode()
+        cipher = self._new_cipher(iv)
+        plain_text = cipher.decrypt(cipher_bytes).decode()
         return self._unpad(plain_text)
+
+    def _new_cipher(self, iv):
+        if not iv:
+            return AES.new(self.key, self._mode)
+        assert self._mode in [
+            AES.MODE_CBC,
+            AES.MODE_CFB,
+            AES.MODE_OFB,
+            AES.MODE_OPENPGP
+        ], 'iv is not applicable for %s mode' % self.mode
+        return AES.new(self.key, self._mode, iv=iv.encode())
 
     def _pad(self, text: str) -> str:
         """
