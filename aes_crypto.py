@@ -38,7 +38,7 @@ class AESCrypto(object):
         plain_text = cipher.decrypt(cipher_bytes).decode()
         return self._unpad(plain_text)
 
-    def _new_cipher(self, iv):
+    def _new_cipher(self, iv: str) -> AES:
         if not iv:
             return AES.new(self.key, self._mode)
         assert self._mode in [
