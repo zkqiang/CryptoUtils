@@ -8,6 +8,11 @@ from Crypto.Cipher import AES
 class AESCrypto(object):
 
     def __init__(self, key: str, mode: str, no_padding: bool):
+        """
+        :param key: 密钥，最多16位
+        :param mode: AES 算法模式
+        :param no_padding: 是否使用填充算法
+        """
         self.key = key[:16].encode()
         self.mode = 'MODE_' + mode.upper()
         self._mode = getattr(AES, self.mode)
@@ -38,7 +43,12 @@ class AESCrypto(object):
         plain_text = cipher.decrypt(cipher_bytes).decode()
         return self._unpad(plain_text)
 
-    def _new_cipher(self, iv: str) -> AES:
+    def _new_cipher(self, iv: str or None) -> AES:
+        """
+        生成 AES 密码器对象，如在不适用的模式中指定 iv 参数会报错
+        :param iv: 向量值
+        :return: AES 密码器对象
+        """
         if not iv:
             return AES.new(self.key, self._mode)
         assert self._mode in [
