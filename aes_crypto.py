@@ -3,20 +3,25 @@
 import base64
 
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 
 
 class AESCrypto(object):
 
-    def __init__(self, key: str, mode: str, no_padding: bool):
+    def __init__(self, key: str, mode: str, padding: str):
         """
-        :param key: 密钥，最多16位
-        :param mode: AES 算法模式
-        :param no_padding: 是否使用填充算法
+        :param key: 密钥，最多支持16位
+        :param mode: AES 算法模式，不区分大小写，如 `ECB` 或 `ecb`
+        :param padding: 填充算法，支持 `NoPadding` `pkcs5` `pkcs7` `x923` `iso7816`，不区分大小写
         """
-        self.key = key[:16].encode()
+        assert len(key) <= 16, 'maximum length of key: 16'
+        self.key = key.encode()
         self.mode = 'MODE_' + mode.upper()
+        assert hasattr(AES, self.mode), 'unsupport %s' % self.mode
         self._mode = getattr(AES, self.mode)
-        self.no_padding = no_padding
+        self.padding = padding.upper()
+        assert self.padding in ['NOPADDING', 'PKCS5', 'PKCS7', 'X923', 'ISO7816'], \
+            'unsupport padding: %s' % self.padding
 
     def encrypt(self, plain_text: str, iv: str = None) -> str:
         """
@@ -51,12 +56,13 @@ class AESCrypto(object):
         """
         if not iv:
             return AES.new(self.key, self._mode)
+
         assert self._mode in [
             AES.MODE_CBC,
             AES.MODE_CFB,
             AES.MODE_OFB,
             AES.MODE_OPENPGP
-        ], 'iv is not applicable for %s mode' % self.mode
+        ], 'iv is not applicable for %s' % self.mode
         return AES.new(self.key, self._mode, iv=iv.encode())
 
     def _pad(self, text: str) -> str:
@@ -69,9 +75,12 @@ class AESCrypto(object):
         """
         size = AES.block_size
         pad_size = size - len(text) % size
-        if self.no_padding:
+        if self.padding == 'NOPADDING':
             return text + pad_size * '\0'
-        return text + pad_size * chr(pad_size)
+        elif self.padding == 'PKCS5':
+            return text + pad_size * chr(pad_size)
+        else:
+            return pad(text.encode(), AES.block_size).decode()
 
     def _unpad(self, text: str) -> str:
         """
@@ -81,6 +90,9 @@ class AESCrypto(object):
         :param text: str
         :return: str
         """
-        if self.no_padding:
+        if self.padding == 'NOPADDING':
             return text.rstrip('\0')
-        return text[:-ord(text[-1])]
+        elif self.padding == 'PKCS5':
+            return text[:-ord(text[-1])]
+        else:
+            return unpad(text.encode(), AES.block_size).decode()
