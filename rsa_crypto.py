@@ -60,7 +60,7 @@ class RSACrypto(object):
         key = public_key
         if not key.startswith(start):
             key = start + key
-        if not key.endswith(start):
+        if not key.endswith(end):
             key = key + end
         return key
 
@@ -76,6 +76,6 @@ class RSACrypto(object):
         key = private_key
         if not key.startswith(start):
             key = start + key
-        if not key.endswith(start):
+        if not key.endswith(end):
             key = key + end
         return key
